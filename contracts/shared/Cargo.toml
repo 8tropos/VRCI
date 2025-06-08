@@ -1,0 +1,19 @@
+[package]
+name = "shared"
+version = "0.1.0"
+authors = ["3dln <ashcan@3dln.com>"]
+edition = "2021"
+
+[dependencies]
+ink = { workspace = true, default-features = false }
+scale = { workspace = true, default-features = false }
+scale-info = { workspace = true, default-features = false }
+
+[lib]
+name = "shared"
+path = "src/lib.rs"
+
+[features]
+default = ["std"]
+std = ["ink/std", "scale/std", "scale-info/std"]
+ink-as-dependency = []
