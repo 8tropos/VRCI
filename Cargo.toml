@@ -1,0 +1,31 @@
+[workspace]
+members = [
+    "contracts/oracle",
+    "contracts/registry",
+    # Note: shared is a dependency, not a contract member
+]
+# Set resolver to version 2 for edition 2021
+resolver = "2"
+
+[profile.release]
+codegen-units = 1
+panic = "abort"   # Important for production contracts
+lto = true
+opt-level = "z"   # Optimize for size
+
+[profile.dev]
+panic = "unwind" # Default for easier debugging during development
+
+[workspace.dependencies]
+ink = { version = "5.1.0", default-features = false }
+scale = { package = "parity-scale-codec", version = "3", default-features = false, features = [
+    "derive",
+] }
+scale-info = { version = "2", default-features = false, features = ["derive"] }
+shared = { path = "contracts/shared", default-features = false }
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+pedantic = "warn"
