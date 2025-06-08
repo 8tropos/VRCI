@@ -1,3 +1,8 @@
+# w3pi/contracts/oracle/Cargo.toml
+
+# This is the Cargo.toml file for the oracle contract.
+# It is used to manage the dependencies and build the contract.
+
 [package]
 name = "oracle"
 version = "0.1.0"

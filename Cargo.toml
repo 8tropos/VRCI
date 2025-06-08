@@ -1,9 +1,19 @@
+# w3pi/Cargo.toml
+
+# This is the root Cargo.toml file for the project.
+# It is used to manage the dependencies and build the project.
+# It is also used to manage the workspace.
+# The workspace is a collection of contracts that are related to each other.
+# The contracts are located in the contracts/ directory.
+# The shared directory is a dependency that is used by the contracts.
+
 [workspace]
 members = [
     "contracts/oracle",
     "contracts/registry",
     # Note: shared is a dependency, not a contract member
 ]
+authors = ["3dln <ashcan@3dln.com>"]
 # Set resolver to version 2 for edition 2021
 resolver = "2"
 

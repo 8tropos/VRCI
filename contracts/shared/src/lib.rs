@@ -1,3 +1,5 @@
+// w3pi/contracts/shared/src/lib.rs
+
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use ink::primitives::AccountId;
