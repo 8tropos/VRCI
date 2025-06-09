@@ -9,6 +9,7 @@ This guide provides step-by-step instructions for building, deploying, and testi
 ### Required Software
 
 #### **1. Rust and Cargo**
+
 ```bash
 # Install Rust
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -20,6 +21,7 @@ cargo --version
 ```
 
 #### **2. WebAssembly Target**
+
 ```bash
 # Add WebAssembly compilation target
 rustup component add rust-src
@@ -30,6 +32,7 @@ rustup target list --installed | grep wasm32
 ```
 
 #### **3. cargo-contract**
+
 ```bash
 # Install ink! contract tooling
 cargo install --force --locked cargo-contract
@@ -39,6 +42,7 @@ cargo contract --version
 ```
 
 #### **4. pop-cli**
+
 ```bash
 # Install Pop CLI for deployment
 cargo install --git https://github.com/r0gue-io/pop-cli
@@ -50,21 +54,25 @@ pop --version
 ### Network Setup
 
 #### **Paseo Testnet Configuration**
+
 - **RPC Endpoint**: `wss://rpc2.paseo.popnetwork.xyz`
 - **Chain Type**: Paseo (Pop Network)
 - **Currency**: PAS (Paseo tokens)
 - **Faucet**: [Paseo Faucet](https://faucet.polkadot.io/)
 
 #### **Account Setup**
+
 You need a funded account on Paseo testnet. Choose one option:
 
 **Option 1: Browser Wallet (Recommended)**
+
 1. Install [Polkadot.js Extension](https://polkadot.js.org/extension/)
 2. Create new account or import existing
 3. Switch to Paseo testnet
 4. Get test tokens from faucet
 
 **Option 2: Development Account (Testing Only)**
+
 ```bash
 # Use Alice's well-known test account
 --suri "//Alice"
@@ -73,6 +81,7 @@ You need a funded account on Paseo testnet. Choose one option:
 ## Project Structure Setup
 
 ### **1. Create Project Directory**
+
 ```bash
 # Create main project directory
 mkdir w3pi && cd w3pi
@@ -84,12 +93,13 @@ mkdir docs
 ```
 
 ### **2. Initialize Workspace**
+
 Create the root `Cargo.toml`:
 
 ```toml
 [workspace]
 members = [
-    "contracts/oracle", 
+    "contracts/oracle",
     "contracts/registry",
     # Note: shared is a dependency, not a workspace member
 ]
@@ -119,11 +129,13 @@ pedantic = "warn"
 ### **3. Set Up Individual Contracts**
 
 Copy the contract code from the previous artifacts:
+
 - `contracts/shared/src/lib.rs` - Shared library code
-- `contracts/oracle/src/lib.rs` - Oracle contract code  
+- `contracts/oracle/src/lib.rs` - Oracle contract code
 - `contracts/registry/src/lib.rs` - Registry contract code
 
 Copy the Cargo.toml files:
+
 - `contracts/shared/Cargo.toml` - Shared library config
 - `contracts/oracle/Cargo.toml` - Oracle contract config
 - `contracts/registry/Cargo.toml` - Registry contract config
@@ -131,6 +143,7 @@ Copy the Cargo.toml files:
 ## Build Process
 
 ### **1. Build Order**
+
 The build order is important due to dependencies:
 
 ```bash
@@ -144,7 +157,7 @@ cd ../oracle
 pop build
 
 # 3. Build registry contract (depends on shared)
-cd ../registry  
+cd ../registry
 pop build
 
 # Return to project root
@@ -152,6 +165,7 @@ cd ../..
 ```
 
 ### **2. Verify Builds**
+
 ```bash
 # Check that all contracts built successfully
 ls -la contracts/oracle/target/ink/
@@ -166,6 +180,7 @@ ls -la contracts/registry/target/ink/
 ### **3. Common Build Issues and Solutions**
 
 #### **Issue: Shared library not found**
+
 ```bash
 # Error: failed to load manifest for dependency `shared`
 # Solution: Use correct path in contract Cargo.toml
@@ -173,6 +188,7 @@ shared = { path = "../shared", default-features = false, features = ["ink-as-dep
 ```
 
 #### **Issue: Clippy warnings as errors**
+
 ```bash
 # Error: arithmetic operation that can potentially result in unexpected side-effects
 # Solution: Use saturating arithmetic (already fixed in our code)
@@ -180,6 +196,7 @@ self.next_token_id = self.next_token_id.saturating_add(1);
 ```
 
 #### **Issue: Missing Default implementation**
+
 ```bash
 # Warning: you should consider adding a `Default` implementation
 # Solution: Already implemented in our contracts
@@ -207,8 +224,9 @@ pop up \
 ```
 
 **Expected Output:**
+
 ```
-✅ Contract deployed and instantiated: 
+✅ Contract deployed and instantiated:
 ● The contract address is "5HApKTfdHzpXnqrFHCuhSop1vDpZKWzV8jW4J4BLArJS1Dfc"
 ● The contract code hash is "0x871708ac27a2bf711926bbfcaf9903d7097d4354df8311959c2852b1aa5cb0d3"
 ```
@@ -230,6 +248,7 @@ pop up \
 ```
 
 **Expected Output:**
+
 ```
 ✅ Contract deployed and instantiated:
 ● The contract address is "5CF56NywCHwv4a5AVdL6EhNAH69NBCenduZoApN7xxXgEhGc"
@@ -261,6 +280,7 @@ EOF
 ### **1. Oracle Contract Testing**
 
 #### **Test 1: Basic Owner Verification**
+
 ```bash
 cd contracts/oracle
 
@@ -274,6 +294,7 @@ pop call contract \
 **Expected Result:** Your account address
 
 #### **Test 2: Read Non-Existent Price**
+
 ```bash
 pop call contract \
   --url wss://rpc2.paseo.popnetwork.xyz \
@@ -286,6 +307,7 @@ pop call contract \
 **Expected Result:** `Ok(None)` (no price data yet)
 
 #### **Test 3: Set Price Data**
+
 ```bash
 # Interactive mode - pop will prompt for parameters
 pop call contract \
@@ -293,16 +315,18 @@ pop call contract \
   --contract $ORACLE_ADDRESS \
   --dry-run
 # Select: update_price
-# Token: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY  
+# Token: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY
 # Price: 10000000000 (1 DOT in plancks)
 # Execute: Yes
 ```
 
 **Expected Events:**
+
 - `ContractEmitted` - PriceUpdated event
 - `ExtrinsicSuccess` - Transaction succeeded
 
 #### **Test 4: Verify Price Was Set**
+
 ```bash
 pop call contract \
   --url wss://rpc2.paseo.popnetwork.xyz \
@@ -315,6 +339,7 @@ pop call contract \
 **Expected Result:** `Ok(Some(10000000000))`
 
 #### **Test 5: Set Market Data**
+
 ```bash
 pop call contract \
   --url wss://rpc2.paseo.popnetwork.xyz \
@@ -326,11 +351,13 @@ pop call contract \
 ```
 
 **Parameters Explained:**
+
 - Token: `$DUMMY_TOKEN`
 - Market Cap: `1000000000000000` (100,000 DOT)
 - Volume: `100000000000000` (10,000 DOT)
 
 #### **Test 6: Verify Market Data**
+
 ```bash
 # Test market cap
 pop call contract \
@@ -352,6 +379,7 @@ pop call contract \
 ### **2. Registry Contract Testing**
 
 #### **Test 1: Initial State**
+
 ```bash
 cd ../registry
 
@@ -371,6 +399,7 @@ pop call contract \
 ```
 
 #### **Test 2: Add Token to Registry**
+
 ```bash
 # Interactive mode
 pop call contract \
@@ -384,10 +413,12 @@ pop call contract \
 ```
 
 **Expected Events:**
+
 - `ContractEmitted` - TokenAdded event
 - `ExtrinsicSuccess` - Transaction succeeded
 
 #### **Test 3: Verify Token Was Added**
+
 ```bash
 # Check token count (should be 1)
 pop call contract \
@@ -406,6 +437,7 @@ pop call contract \
 ```
 
 #### **Test 4: Cross-Contract Call (The Main Event!)**
+
 ```bash
 # Get enriched token data with live oracle prices
 pop call contract \
@@ -417,6 +449,7 @@ pop call contract \
 ```
 
 **Expected Result:**
+
 ```
 Ok(Ok(EnrichedTokenData {
     token_contract: 5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY,
@@ -425,12 +458,13 @@ Ok(Ok(EnrichedTokenData {
     weight_investment: 0,
     tier: 0,
     market_cap: 1000000000000000,   // From oracle
-    market_volume: 100000000000000, // From oracle  
+    market_volume: 100000000000000, // From oracle
     price: 10000000000              // From oracle
 }))
 ```
 
 #### **Test 5: Update Registry Data**
+
 ```bash
 # Update token metadata
 pop call contract \
@@ -443,12 +477,14 @@ pop call contract \
 ```
 
 **Parameters Explained:**
+
 - Token ID: `1`
 - Balance: `500000000000` (50 DOT)
 - Weight: `7500` (75% allocation in basis points)
 - Tier: `4` (low risk tier)
 
 #### **Test 6: Verify Updated Data**
+
 ```bash
 pop call contract \
   --url wss://rpc2.paseo.popnetwork.xyz \
@@ -571,7 +607,7 @@ source .env 2>/dev/null || true
 # Build contracts
 echo "📦 Building contracts..."
 cd contracts/shared && cargo build
-cd ../oracle && pop build  
+cd ../oracle && pop build
 cd ../registry && pop build
 cd ../..
 
@@ -764,6 +800,7 @@ esac
 ```
 
 Make scripts executable:
+
 ```bash
 chmod +x scripts/*.sh
 ```
@@ -773,6 +810,7 @@ chmod +x scripts/*.sh
 ### **1. Performance Testing**
 
 #### **Gas Usage Analysis**
+
 ```bash
 # Test gas consumption for different operations
 cd contracts/oracle
@@ -788,6 +826,7 @@ pop call contract \
 ```
 
 #### **Cross-Contract Call Performance**
+
 ```bash
 # Compare gas usage: basic vs enriched calls
 cd contracts/registry
@@ -812,6 +851,7 @@ pop call contract \
 ### **2. Stress Testing**
 
 #### **Multiple Token Registration**
+
 ```bash
 #!/bin/bash
 # Test script for registering multiple tokens
@@ -823,7 +863,7 @@ echo "🔥 Stress testing with multiple tokens..."
 # Array of test token addresses
 TOKENS=(
     "5GrwvaEF5zXb26Fz9rcQpDWS57CtERHpNehXCPcNoHGKutQY"
-    "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM" 
+    "5C4hrfjw9DjXZTzV3MwzrrAr9P1MJhSrvWGWqi1eSuyUpnhM"
     "5FbSD6WXDGiLTxunqeK5BATNiocfCqu9bS1yArVjCgeBLkVy"
     "5DAAnrj7VHTznn2AWBemMuyBwZWs6FNFjdyVXUeYum3PTXFy"
     "5HGjWAeFDfFCWPsjFQdVV2Msvz2XtMktvgocEZcCj68kUMaw"
@@ -833,7 +873,7 @@ cd contracts/registry
 
 for i in "${!TOKENS[@]}"; do
     echo "Registering token $((i+1)): ${TOKENS[$i]}"
-    
+
     pop call contract \
       --url $RPC_URL \
       --contract $REGISTRY_ADDRESS \
@@ -841,7 +881,7 @@ for i in "${!TOKENS[@]}"; do
       --args ${TOKENS[$i]} $ORACLE_ADDRESS \
       --use-wallet \
       --execute
-    
+
     sleep 2  # Avoid rate limiting
 done
 
@@ -862,6 +902,7 @@ done
 ### **3. Error Condition Testing**
 
 #### **Authorization Testing**
+
 ```bash
 # Test unauthorized access attempts
 echo "🔒 Testing authorization controls..."
@@ -886,6 +927,7 @@ pop call contract \
 ```
 
 #### **Boundary Testing**
+
 ```bash
 # Test edge cases and boundary conditions
 
@@ -919,6 +961,7 @@ pop call contract \
 ### **1. Event Monitoring**
 
 #### **Set Up Event Watching**
+
 ```bash
 # Monitor oracle events
 echo "👀 Monitoring oracle events..."
@@ -929,6 +972,7 @@ wscat -c $RPC_URL
 ```
 
 #### **Event Analysis Script**
+
 ```bash
 #!/bin/bash
 # Parse and analyze contract events
@@ -954,6 +998,7 @@ tail -10 $LOG_FILE
 ### **2. Health Checks**
 
 #### **Contract Health Script**
+
 ```bash
 #!/bin/bash
 # Check contract health and accessibility
@@ -976,7 +1021,7 @@ else
     echo "❌ Oracle is not accessible"
 fi
 
-# Test Registry accessibility  
+# Test Registry accessibility
 echo "Checking Registry..."
 TOKEN_COUNT=$(pop call contract \
   --url $RPC_URL \
@@ -1000,7 +1045,7 @@ if [[ $(echo "$TOKEN_COUNT" | grep -o '[0-9]*') -gt 0 ]]; then
       --message get_token_data \
       --args 1 \
       --dry-run 2>/dev/null)
-    
+
     if [[ $? -eq 0 ]]; then
         echo "✅ Cross-contract calls working"
     else
@@ -1020,6 +1065,7 @@ echo "Health check complete!"
 #### **Issue 1: Build Failures**
 
 **Problem:** `error: linking with 'rust-lld' failed`
+
 ```bash
 # Solution: Clean and rebuild
 cargo clean
@@ -1027,6 +1073,7 @@ pop build
 ```
 
 **Problem:** `shared` dependency not found
+
 ```bash
 # Solution: Check path in Cargo.toml
 shared = { path = "../shared", default-features = false, features = ["ink-as-dependency"] }
@@ -1035,12 +1082,14 @@ shared = { path = "../shared", default-features = false, features = ["ink-as-dep
 #### **Issue 2: Deployment Failures**
 
 **Problem:** `Insufficient balance`
+
 ```bash
 # Solution: Get more test tokens from faucet
 # Visit: https://faucet.polkadot.io/
 ```
 
 **Problem:** `Connection refused`
+
 ```bash
 # Solution: Check RPC endpoint
 --url wss://rpc2.paseo.popnetwork.xyz
@@ -1049,6 +1098,7 @@ shared = { path = "../shared", default-features = false, features = ["ink-as-dep
 #### **Issue 3: Contract Call Failures**
 
 **Problem:** `ContractTrapped`
+
 ```bash
 # Solution: Check cross-contract addresses are correct
 # Verify oracle contract is deployed and accessible
@@ -1056,6 +1106,7 @@ pop call contract --contract $ORACLE_ADDRESS --message get_owner --dry-run
 ```
 
 **Problem:** `Invalid message name`
+
 ```bash
 # Solution: Run call from correct contract directory
 cd contracts/oracle  # For oracle calls
@@ -1065,6 +1116,7 @@ cd contracts/registry # For registry calls
 #### **Issue 4: Cross-Contract Call Issues**
 
 **Problem:** Oracle returns `None` values
+
 ```bash
 # Solution: Ensure oracle has data for the token
 pop call contract \
@@ -1075,6 +1127,7 @@ pop call contract \
 ```
 
 **Problem:** Registry can't call oracle
+
 ```bash
 # Solution: Verify addresses are correct in registry
 # Check that oracle is deployed and responding
@@ -1083,11 +1136,12 @@ pop call contract \
 ### **Debug Commands**
 
 #### **Verify Contract State**
+
 ```bash
 # Check oracle state
 pop call contract --contract $ORACLE_ADDRESS --message get_owner --dry-run
 
-# Check registry state  
+# Check registry state
 pop call contract --contract $REGISTRY_ADDRESS --message get_token_count --dry-run
 
 # Check specific token data
@@ -1095,6 +1149,7 @@ pop call contract --contract $REGISTRY_ADDRESS --message token_exists --args 1 -
 ```
 
 #### **Network Debugging**
+
 ```bash
 # Test RPC connection
 curl -H "Content-Type: application/json" \
@@ -1136,12 +1191,14 @@ pop call contract --dry-run  # Will show your account info
 ## Next Steps
 
 ### **Immediate Actions**
+
 1. Deploy contracts to Paseo testnet
 2. Run basic functionality tests
 3. Verify cross-contract calls work
 4. Document your specific contract addresses
 
 ### **Development Extensions**
+
 1. Add more oracle data sources
 2. Implement governance mechanisms
 3. Create frontend interface
@@ -1149,6 +1206,7 @@ pop call contract --dry-run  # Will show your account info
 5. Implement advanced portfolio features
 
 ### **Production Preparation**
+
 1. Security audit
 2. Comprehensive testing
 3. Performance optimization
@@ -1158,16 +1216,19 @@ pop call contract --dry-run  # Will show your account info
 ## Support and Resources
 
 ### **Documentation**
+
 - [ink! Documentation](https://use.ink/)
 - [Pop CLI Documentation](https://learn.onpop.io/)
 - [Polkadot.js Documentation](https://polkadot.js.org/docs/)
 
 ### **Community**
+
 - [ink! Discord](https://discord.gg/wGUDt2p)
 - [Polkadot Discord](https://discord.gg/polkadot)
 - [Substrate Stack Exchange](https://substrate.stackexchange.com/)
 
 ### **Tools**
+
 - [Contracts UI](https://contracts-ui.substrate.io/)
 - [Polkadot.js Apps](https://polkadot.js.org/apps/)
 - [Subscan Explorer](https://polkadot.subscan.io/)

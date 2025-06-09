@@ -7,16 +7,19 @@ The Shared library (`contracts/shared`) provides common types, traits, and utili
 ## Purpose
 
 ### **Type Consistency**
+
 - Shared data structures used across contracts
 - Common error types for uniform error handling
 - Standardized traits for contract interfaces
 
 ### **Code Reuse**
+
 - Eliminates duplicate type definitions
 - Provides common functionality
 - Ensures consistent behavior across contracts
 
 ### **Cross-Contract Compatibility**
+
 - Enables type-safe cross-contract calls
 - Provides contract interface definitions
 - Facilitates ecosystem integration
@@ -49,6 +52,7 @@ The Shared library (`contracts/shared`) provides common types, traits, and utili
 ### Data Structures
 
 #### TokenData
+
 The fundamental data structure representing a token in the registry.
 
 ```rust
@@ -60,7 +64,7 @@ The fundamental data structure representing a token in the registry.
 pub struct TokenData {
     /// Token contract address
     pub token_contract: AccountId,
-    /// Oracle contract address  
+    /// Oracle contract address
     pub oracle_contract: AccountId,
     /// Current balance (managed by registry)
     pub balance: u128,
@@ -72,6 +76,7 @@ pub struct TokenData {
 ```
 
 **Field Descriptions:**
+
 - `token_contract`: The on-chain address of the actual token contract
 - `oracle_contract`: The address of the oracle providing price data
 - `balance`: Amount held in the registry (in plancks)
@@ -79,6 +84,7 @@ pub struct TokenData {
 - `tier`: Quality/risk tier (0 = highest risk, 5 = lowest risk)
 
 #### EnrichedTokenData
+
 Extended token data that includes live oracle information.
 
 ```rust
@@ -100,6 +106,7 @@ pub struct EnrichedTokenData {
 ```
 
 **Additional Fields:**
+
 - `market_cap`: Total market capitalization from oracle
 - `market_volume`: 24-hour trading volume from oracle
 - `price`: Current token price from oracle
@@ -107,6 +114,7 @@ pub struct EnrichedTokenData {
 ### Error Types
 
 #### Error Enum
+
 Centralized error handling for all contracts.
 
 ```rust
@@ -122,6 +130,7 @@ pub enum Error {
 ```
 
 **Error Descriptions:**
+
 - `Unauthorized`: Caller lacks permission for the operation
 - `TokenNotFound`: Requested token ID doesn't exist
 - `OracleCallFailed`: Cross-contract call to oracle failed
@@ -131,6 +140,7 @@ pub enum Error {
 ### Traits
 
 #### Oracle Trait
+
 Defines the interface that oracle contracts must implement.
 
 ```rust
@@ -151,6 +161,7 @@ pub trait Oracle {
 ```
 
 **Usage Benefits:**
+
 - **Type Safety**: Ensures oracle contracts implement required methods
 - **Documentation**: Clear interface contract
 - **Future Compatibility**: Easy to extend with new methods
@@ -184,11 +195,13 @@ ink-as-dependency = []
 ### Feature Flags
 
 #### `std` Feature
+
 - **Purpose**: Standard library support for off-chain environments
 - **Enables**: Full Rust std library, debugging, testing
 - **Usage**: Development, testing, metadata generation
 
 #### `ink-as-dependency` Feature
+
 - **Purpose**: Allows other contracts to import this as a dependency
 - **Required**: When other contracts use `use shared::*`
 - **Usage**: Cross-contract integration
@@ -196,6 +209,7 @@ ink-as-dependency = []
 ## Type Annotations and Serialization
 
 ### SCALE Codec Support
+
 All types implement SCALE (Simple Concatenated Aggregate Little-Endian) codec for blockchain serialization.
 
 ```rust
@@ -203,6 +217,7 @@ All types implement SCALE (Simple Concatenated Aggregate Little-Endian) codec fo
 ```
 
 ### Storage Layout Support
+
 Types that can be stored in contract storage implement `StorageLayout`.
 
 ```rust
@@ -213,6 +228,7 @@ Types that can be stored in contract storage implement `StorageLayout`.
 ```
 
 ### TypeInfo Support
+
 Enables metadata generation for frontend and tooling integration.
 
 ```rust
@@ -255,6 +271,7 @@ pub fn get_token_data(&self, token_id: u32) -> Result<EnrichedTokenData, Error> 
 ## Constants and Utilities
 
 ### Polkadot Unit Constants
+
 ```rust
 pub const PLANCK: u128 = 1;
 pub const DOT: u128 = 10_000_000_000;      // 10^10 plancks
@@ -262,6 +279,7 @@ pub const KSM: u128 = 1_000_000_000_000;   // 10^12 plancks
 ```
 
 ### Basis Points Utilities
+
 ```rust
 pub const MAX_WEIGHT: u32 = 10_000;  // 100% in basis points
 pub const PERCENT: u32 = 100;        // 1% in basis points
@@ -278,6 +296,7 @@ pub fn basis_points_to_percent(bp: u32) -> u32 {
 ```
 
 ### Tier Constants
+
 ```rust
 pub const MIN_TIER: u32 = 0;  // Highest risk
 pub const MAX_TIER: u32 = 5;  // Lowest risk
@@ -298,16 +317,19 @@ pub const TIER_DESCRIPTIONS: [&str; 6] = [
 ### For Library Maintainers
 
 #### **Version Compatibility**
+
 - Use semantic versioning for breaking changes
 - Maintain backward compatibility when possible
 - Document breaking changes clearly
 
 #### **Type Design**
+
 - Keep types minimal and focused
 - Use descriptive field names
 - Add documentation comments
 
 #### **Error Handling**
+
 - Provide specific error variants
 - Include helpful error messages
 - Consider error recovery strategies
@@ -315,6 +337,7 @@ pub const TIER_DESCRIPTIONS: [&str; 6] = [
 ### For Contract Developers
 
 #### **Import Strategy**
+
 ```rust
 // Specific imports for clarity
 use shared::{TokenData, Error};
@@ -324,6 +347,7 @@ use shared::{TokenData, Error};
 ```
 
 #### **Error Propagation**
+
 ```rust
 // Proper error handling
 pub fn some_function() -> Result<TokenData, Error> {
@@ -334,6 +358,7 @@ pub fn some_function() -> Result<TokenData, Error> {
 ```
 
 #### **Type Usage**
+
 ```rust
 // Use shared types consistently
 #[ink(message)]
@@ -399,7 +424,7 @@ fn cross_contract_compatibility() {
         market_volume: 0,
         price: oracle_response.unwrap_or(0),
     };
-    
+
     assert_eq!(enriched_data.price, 10_000_000_000);
 }
 ```
@@ -409,6 +434,7 @@ fn cross_contract_compatibility() {
 ### From v0.1.0 to Future Versions
 
 #### **Adding New Fields**
+
 When adding fields to existing structs, consider backward compatibility:
 
 ```rust
@@ -443,6 +469,7 @@ pub struct TokenData {
 ```
 
 #### **Error Type Evolution**
+
 ```rust
 // Add new error variants at the end
 pub enum Error {
@@ -469,7 +496,7 @@ pub trait ExtendedOracle: Oracle {
     /// Get historical price data
     #[ink(message)]
     fn get_historical_price(&self, token: AccountId, timestamp: u64) -> Option<u128>;
-    
+
     /// Get price confidence interval
     #[ink(message)]
     fn get_price_confidence(&self, token: AccountId) -> Option<(u128, u128)>;
@@ -506,6 +533,7 @@ pub struct PriceAlert {
 #### **Compilation Errors**
 
 **Issue**: `the trait bound 'TokenData: StorageLayout' is not satisfied`
+
 ```rust
 // Solution: Ensure std feature is enabled for storage types
 #[cfg_attr(
@@ -515,6 +543,7 @@ pub struct PriceAlert {
 ```
 
 **Issue**: `cannot find type 'Error' in this scope`
+
 ```rust
 // Solution: Import shared types
 use shared::Error;
@@ -523,6 +552,7 @@ use shared::Error;
 #### **Cross-Contract Call Issues**
 
 **Issue**: Types don't match between contracts
+
 ```rust
 // Solution: Ensure both contracts use same shared version
 # In Cargo.toml
@@ -532,6 +562,7 @@ shared = { path = "../shared", version = "0.1.0" }
 #### **Serialization Problems**
 
 **Issue**: SCALE codec errors during cross-contract calls
+
 ```rust
 // Solution: Ensure all types implement required traits
 #[derive(Decode, Encode, Clone, Debug, PartialEq)]
@@ -540,12 +571,13 @@ shared = { path = "../shared", version = "0.1.0" }
 ### Debug Strategies
 
 #### **Type Compatibility Checking**
+
 ```rust
 // Add debug assertions in development
 #[cfg(debug_assertions)]
 fn verify_type_compatibility() {
     use shared::TokenData;
-    
+
     // Verify serialization roundtrip
     let test_data = TokenData { /* ... */ };
     let encoded = test_data.encode();
@@ -555,6 +587,7 @@ fn verify_type_compatibility() {
 ```
 
 #### **Error Tracing**
+
 ```rust
 // Add detailed error context
 impl fmt::Display for Error {
@@ -573,18 +606,21 @@ impl fmt::Display for Error {
 ### Planned Features
 
 #### **v0.2.0**
+
 - Historical data types
 - Price alert structures
 - Portfolio management types
 - Enhanced error context
 
 #### **v0.3.0**
+
 - Multi-oracle support types
 - Governance structures
 - Staking/rewards types
 - Cross-chain compatibility
 
 #### **v1.0.0**
+
 - Stable API guarantee
 - Full documentation
 - Production optimizations
@@ -609,7 +645,7 @@ pub const MAX_TIER: u32 = 5; /* SCREAMING_SNAKE_CASE for constants */
 
 // Document public APIs
 /// Represents token information stored in the registry
-/// 
+///
 /// # Fields
 /// - `token_contract`: The on-chain address of the token
 /// - `balance`: Amount held in plancks
