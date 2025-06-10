@@ -1,0 +1,28 @@
+# w3pi/contracts/portfolio/Cargo.toml
+
+# This is the Cargo.toml file for the portfolio contract.
+# It is used to manage the dependencies and build the contract.
+
+[package]
+name = "portfolio"
+version = "0.1.0"
+edition = "2021"
+authors = ["3dln <ashcan@3dln.com>"]
+
+[dependencies]
+ink = { workspace = true, default-features = false }
+shared = { path = "../shared", default-features = false, features = ["ink-as-dependency"] }
+scale = { workspace = true, default-features = false }
+scale-info = { workspace = true, default-features = false }
+
+[dev-dependencies]
+ink_e2e = { version = "5.1.1" }
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["std"]
+std = ["ink/std", "shared/std", "scale/std", "scale-info/std"]
+ink-as-dependency = []
+e2e-tests = []
