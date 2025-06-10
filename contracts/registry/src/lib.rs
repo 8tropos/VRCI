@@ -125,6 +125,10 @@ mod registry {
         last_tier_change: Option<u64>,
         /// DOT/USD oracle contract for conversion rates
         dot_usd_oracle: Option<AccountId>,
+
+        // ===== NEW GRACE PERIOD CONFIGURATION =====
+        /// Adjustable grace period in milliseconds (default: 90 days)
+        grace_period_ms: u64,
     }
 
     // ===== ENHANCED EVENTS =====
@@ -171,7 +175,7 @@ mod registry {
         new_tier: Tier,
         market_cap: u128,
         volume: u128,
-        reason: String, // "automatic", "manual", "grace_period_ended"
+        reason: String, // "automatic", "manual", "grace_period_ended", "emergency_override"
     }
 
     #[ink(event)]
@@ -198,6 +202,29 @@ mod registry {
         current_tier: Tier,
         pending_tier: Tier,
         grace_end_time: u64,
+    }
+
+    // ===== NEW GRACE PERIOD EVENTS =====
+
+    #[ink(event)]
+    pub struct GracePeriodUpdated {
+        old_period_ms: u64,
+        new_period_ms: u64,
+        updated_by: AccountId,
+        timestamp: u64,
+    }
+
+    #[ink(event)]
+    pub struct EmergencyTierOverride {
+        #[ink(topic)]
+        token_id: u32,
+        #[ink(topic)]
+        token_contract: AccountId,
+        old_tier: Tier,
+        new_tier: Tier,
+        overridden_by: AccountId,
+        timestamp: u64,
+        reason: String,
     }
 
     // ===== EXISTING EVENTS (unchanged) =====
@@ -229,8 +256,14 @@ mod registry {
 
     // ===== CONSTANTS =====
 
-    /// Grace period for tier changes: 90 days in milliseconds
-    const TIER_GRACE_PERIOD_MS: u64 = 90 * 24 * 60 * 60 * 1000; // 7,776,000,000 ms
+    /// Default grace period for tier changes: 90 days in milliseconds
+    const DEFAULT_GRACE_PERIOD_MS: u64 = 90 * 24 * 60 * 60 * 1000; // 7,776,000,000 ms
+
+    /// Minimum grace period: 1 hour
+    const MIN_GRACE_PERIOD_MS: u64 = 60 * 60 * 1000; // 3,600,000 ms
+
+    /// Maximum grace period: 365 days
+    const MAX_GRACE_PERIOD_MS: u64 = 365 * 24 * 60 * 60 * 1000; // 31,536,000,000 ms
 
     /// Minimum tokens required for 80% rule calculation
     const MIN_TOKENS_FOR_TIER_SHIFT: u32 = 5;
@@ -259,6 +292,7 @@ mod registry {
                 tier_distribution: Mapping::default(),
                 last_tier_change: None,
                 dot_usd_oracle: None, // Must be set by owner after deployment
+                grace_period_ms: DEFAULT_GRACE_PERIOD_MS, // 90 days default
             };
 
             // Initialize tier distribution cache
@@ -577,6 +611,187 @@ mod registry {
             Ok(token_data.tier)
         }
 
+        // ===== NEW EMERGENCY OVERRIDE FUNCTIONS =====
+
+        /// Emergency tier override - bypasses grace period (owner only)
+        #[ink(message)]
+        pub fn emergency_tier_override(
+            &mut self,
+            token_id: u32,
+            new_tier: Tier,
+            reason: String,
+        ) -> Result<(), Error> {
+            self.ensure_owner()?;
+
+            let mut token_data = self.tokens.get(token_id).ok_or(Error::TokenNotFound)?;
+            let old_tier = token_data.tier;
+
+            if old_tier == new_tier {
+                return Ok(()); // No change needed
+            }
+
+            // Update tier distribution cache
+            self.decrement_tier_count(old_tier);
+            self.increment_tier_count(new_tier);
+
+            // Apply immediate tier change (bypass grace period)
+            token_data.tier = new_tier;
+            token_data.tier_change_timestamp = Some(self.env().block_timestamp());
+            token_data.pending_tier_change = None; // Clear any pending changes
+
+            self.tokens.insert(token_id, &token_data);
+
+            // Emit emergency override event
+            self.env().emit_event(EmergencyTierOverride {
+                token_id,
+                token_contract: token_data.token_contract,
+                old_tier,
+                new_tier,
+                overridden_by: self.env().caller(),
+                timestamp: self.env().block_timestamp(),
+                reason: reason.clone(),
+            });
+
+            // Also emit regular tier change event for consistency
+            if let Some((market_cap, volume)) = self
+                .get_market_data_from_oracle(token_data.token_contract, token_data.oracle_contract)
+            {
+                self.env().emit_event(TokenTierChanged {
+                    token_id,
+                    token_contract: token_data.token_contract,
+                    old_tier,
+                    new_tier,
+                    market_cap,
+                    volume,
+                    reason: "emergency_override".into(),
+                });
+            }
+
+            Ok(())
+        }
+
+        /// Emergency tier override to calculated tier - bypasses grace period (owner only)
+        #[ink(message)]
+        pub fn emergency_tier_override_to_calculated(
+            &mut self,
+            token_id: u32,
+            reason: String,
+        ) -> Result<Tier, Error> {
+            self.ensure_owner()?;
+
+            let token_data = self.tokens.get(token_id).ok_or(Error::TokenNotFound)?;
+
+            // Calculate what tier should be based on current market data
+            let calculated_tier = self
+                .calculate_token_tier_internal(
+                    token_data.token_contract,
+                    token_data.oracle_contract,
+                )
+                .ok_or(Error::OracleCallFailed)?;
+
+            // Apply emergency override to calculated tier
+            self.emergency_tier_override(token_id, calculated_tier, reason)?;
+
+            Ok(calculated_tier)
+        }
+
+        /// Clear pending tier change (owner only)
+        #[ink(message)]
+        pub fn clear_pending_tier_change(&mut self, token_id: u32) -> Result<(), Error> {
+            self.ensure_owner()?;
+
+            let mut token_data = self.tokens.get(token_id).ok_or(Error::TokenNotFound)?;
+
+            if token_data.pending_tier_change.is_some() {
+                token_data.pending_tier_change = None;
+                token_data.tier_change_timestamp = None;
+                self.tokens.insert(token_id, &token_data);
+            }
+
+            Ok(())
+        }
+
+        // ===== NEW GRACE PERIOD MANAGEMENT =====
+
+        /// Set grace period duration (owner only)
+        #[ink(message)]
+        pub fn set_grace_period(&mut self, period_ms: u64) -> Result<(), Error> {
+            self.ensure_owner()?;
+
+            // Validate grace period range
+            if !(MIN_GRACE_PERIOD_MS..=MAX_GRACE_PERIOD_MS).contains(&period_ms) {
+                return Err(Error::InvalidParameter);
+            }
+
+            let old_period = self.grace_period_ms;
+            self.grace_period_ms = period_ms;
+
+            self.env().emit_event(GracePeriodUpdated {
+                old_period_ms: old_period,
+                new_period_ms: period_ms,
+                updated_by: self.env().caller(),
+                timestamp: self.env().block_timestamp(),
+            });
+
+            Ok(())
+        }
+
+        /// Get current grace period duration in milliseconds
+        #[ink(message)]
+        pub fn get_grace_period(&self) -> u64 {
+            self.grace_period_ms
+        }
+
+        /// Get grace period duration in days (for convenience)
+        #[ink(message)]
+        pub fn get_grace_period_days(&self) -> u64 {
+            self.grace_period_ms / (24 * 60 * 60 * 1000)
+        }
+
+        /// Get grace period duration in hours (for convenience)
+        #[ink(message)]
+        pub fn get_grace_period_hours(&self) -> u64 {
+            self.grace_period_ms / (60 * 60 * 1000)
+        }
+
+        /// Get grace period limits (min/max allowed)
+        #[ink(message)]
+        pub fn get_grace_period_limits(&self) -> (u64, u64) {
+            (MIN_GRACE_PERIOD_MS, MAX_GRACE_PERIOD_MS)
+        }
+
+        /// Calculate grace period end time for a token
+        #[ink(message)]
+        pub fn get_grace_period_end_time(&self, token_id: u32) -> Option<u64> {
+            let token_data = self.tokens.get(token_id)?;
+            let start_time = token_data.tier_change_timestamp?;
+            Some(start_time.saturating_add(self.grace_period_ms))
+        }
+
+        /// Check how much time is left in grace period for a token
+        #[ink(message)]
+        pub fn get_grace_period_remaining(&self, token_id: u32) -> Option<u64> {
+            let end_time = self.get_grace_period_end_time(token_id)?;
+            let current_time = self.env().block_timestamp();
+
+            if current_time >= end_time {
+                Some(0) // Grace period expired
+            } else {
+                Some(end_time.saturating_sub(current_time))
+            }
+        }
+
+        /// Check if grace period has expired for a token
+        #[ink(message)]
+        pub fn is_grace_period_expired(&self, token_id: u32) -> bool {
+            match self.get_grace_period_remaining(token_id) {
+                Some(remaining) => remaining == 0,
+                None => false, // No grace period active
+            }
+        }
+
+        // ===== EXISTING FUNCTIONS (updated to use dynamic grace period) =====
+
         /// Batch update tiers for all tokens (gas-intensive)
         #[ink(message)]
         pub fn refresh_all_tiers(&mut self) -> Result<u32, Error> {
@@ -608,7 +823,7 @@ mod registry {
             Ok(updated_count)
         }
 
-        /// Process tokens with expired grace periods
+        /// Process tokens with expired grace periods (updated to use dynamic grace period)
         #[ink(message)]
         pub fn process_grace_periods(&mut self) -> Result<u32, Error> {
             self.ensure_role(Role::TokenUpdater)?;
@@ -623,8 +838,8 @@ mod registry {
                         token_data.pending_tier_change,
                         token_data.tier_change_timestamp,
                     ) {
-                        // Check if grace period has expired
-                        if current_time.saturating_sub(change_time) >= TIER_GRACE_PERIOD_MS {
+                        // Check if grace period has expired (using dynamic grace period)
+                        if current_time.saturating_sub(change_time) >= self.grace_period_ms {
                             let old_tier = token_data.tier;
 
                             // Update tier distribution cache
@@ -1004,7 +1219,7 @@ mod registry {
 
         // ===== INTERNAL HELPER FUNCTIONS =====
 
-        /// Handle tier change with grace period logic
+        /// Handle tier change with grace period logic (updated to use dynamic grace period)
         fn handle_tier_change(
             &mut self,
             token_data: &mut EnhancedTokenData,
@@ -1043,11 +1258,11 @@ mod registry {
                     });
                 }
             } else {
-                // Start grace period for automatic changes
+                // Start grace period for automatic changes (using dynamic grace period)
                 token_data.pending_tier_change = Some(new_tier);
                 token_data.tier_change_timestamp = Some(current_time);
 
-                let grace_end_time = current_time.saturating_add(TIER_GRACE_PERIOD_MS);
+                let grace_end_time = current_time.saturating_add(self.grace_period_ms);
 
                 self.env().emit_event(GracePeriodStarted {
                     token_id: self

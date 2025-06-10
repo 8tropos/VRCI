@@ -1,0 +1,23 @@
+[package]
+name = "dex"
+version = "0.1.0"
+authors = ["3dln <ashcan@3dln.com>"]
+edition = "2021"
+
+[dependencies]
+ink = { workspace = true, default-features = false }
+shared = { path = "../shared", default-features = false, features = ["ink-as-dependency"] }
+scale = { workspace = true, default-features = false }
+scale-info = { workspace = true, default-features = false }
+
+[dev-dependencies]
+ink_e2e = { version = "5.1.1" }
+
+[lib]
+path = "src/lib.rs"
+
+[features]
+default = ["std"]
+std = ["ink/std", "shared/std", "scale/std", "scale-info/std"]
+ink-as-dependency = []
+e2e-tests = [] 

@@ -41,15 +41,39 @@ pub struct EnrichedTokenData {
     pub price: u128,
 }
 
-/// Common error types
+/// Enhanced error types for better debugging and validation
 #[derive(Debug, PartialEq, Eq, Encode, Decode)]
 #[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
 pub enum Error {
+    // Authorization errors
     Unauthorized,
+    UnauthorizedRole,
+
+    // Token management errors
     TokenNotFound,
-    OracleCallFailed,
+    TokenAlreadyExists,
+    InvalidTokenContract,
+    ZeroAddress,
+
+    // Parameter validation errors
+    InvalidWeight, // Weight not in 0-10000 range
+    InvalidTier,   // Tier not in 0-5 range
     InvalidParameter,
+
+    // Oracle and external errors
+    OracleCallFailed,
+
+    // Business logic errors
     InsufficientBalance,
+}
+
+/// Role-based access control roles
+#[derive(Debug, PartialEq, Eq, Encode, Decode, Clone, Copy)]
+#[cfg_attr(feature = "std", derive(scale_info::TypeInfo))]
+pub enum Role {
+    TokenManager,        // Can add/remove tokens
+    TokenUpdater,        // Can update existing token data
+    EmergencyController, // Can pause/unpause operations
 }
 
 /// Oracle trait for type-safe cross-contract calls
