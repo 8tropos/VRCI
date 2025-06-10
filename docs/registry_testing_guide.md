@@ -1,4 +1,5 @@
 # W3PI Registry Contract Testing Guide
+
 ## Complete 22-Phase Testing Plan for Tier System
 
 This comprehensive testing guide validates all new tier system functionality while ensuring backward compatibility and proper error handling.
@@ -8,18 +9,20 @@ This comprehensive testing guide validates all new tier system functionality whi
 ## **Phase 1: Initial Setup & Configuration**
 
 ### 1. **Set Up DOT/USD Oracle** (Critical First Step)
+
 ```bash
 # Call on Registry Contract
 registry.set_dot_usd_oracle(oracle_contract_address)
 
 # Verify setup
-registry.get_dot_usd_oracle() 
+registry.get_dot_usd_oracle()
 # Expected: Returns your oracle contract address
 ```
 
 **Purpose**: Enable USD-to-plancks conversion for tier calculations
 
 ### 2. **Grant Roles for Testing**
+
 ```bash
 # Call on Registry Contract
 registry.grant_role(Role::TokenManager, your_test_account)
@@ -33,6 +36,7 @@ registry.has_role(Role::TokenManager, your_account)
 **Purpose**: Allow your account to manage tokens during testing
 
 ### 3. **Verify Initial Configuration**
+
 ```bash
 # Check default state
 registry.get_active_tier()
@@ -50,6 +54,7 @@ registry.get_tier_distribution()
 ## **Phase 2: Token Registration & Tier Classification**
 
 ### 4. **Add First Token**
+
 ```bash
 # Add token with oracle
 registry.add_token(token_contract_1, oracle_contract_1)
@@ -69,6 +74,7 @@ registry.get_tier_distribution()
 **Purpose**: Test basic token registration and automatic tier assignment
 
 ### 5. **Test Tier Calculation**
+
 ```bash
 # Calculate tier for token
 registry.calculate_token_tier(1)
@@ -82,6 +88,7 @@ registry.get_enhanced_token_data(1).tier
 **Purpose**: Verify tier calculation logic works correctly
 
 ### 6. **Add Multiple Tokens** (3-5 tokens minimum)
+
 ```bash
 # Repeat for different tokens
 registry.add_token(token_contract_2, oracle_contract_2)
@@ -101,6 +108,7 @@ registry.get_tier_distribution()
 ## **Phase 3: Tier Management & Grace Periods**
 
 ### 7. **Test Manual Tier Updates (Enhanced with New Features)**
+
 ```bash
 # Force tier recalculation
 registry.update_token_tier(token_id)
@@ -127,6 +135,7 @@ registry.is_grace_period_expired(token_id)
 **Purpose**: Test manual tier recalculation and new grace period monitoring
 
 ### 8. **Test Grace Period System (Enhanced)**
+
 ```bash
 # Prerequisites: Ensure oracle data changes for a token
 # Modify oracle market cap to trigger tier change
@@ -153,6 +162,7 @@ registry.get_grace_period_days()
 **Purpose**: Test grace period mechanism with enhanced monitoring
 
 ### 9. **Process Grace Periods (Enhanced)**
+
 ```bash
 # Note: In production, wait for grace period to expire
 # For testing, you can adjust grace period first
@@ -183,6 +193,7 @@ registry.get_tokens_with_pending_changes()
 **Purpose**: Test grace period expiration with adjustable timing
 
 ### **NEW 9b. Test Emergency Override Functions**
+
 ```bash
 # Emergency override to specific tier (owner only)
 registry.emergency_tier_override(token_id, Tier::Tier2, "Testing emergency override")
@@ -215,6 +226,7 @@ registry.clear_pending_tier_change(token_id)
 ## **Phase 4: 80% Rule & Automatic Tier Shifting**
 
 ### 10. **Test 80% Rule Detection**
+
 ```bash
 # Setup: Add enough tokens to same higher tier (≥80% of total)
 # You need at least 5 tokens total for MIN_TOKENS_FOR_TIER_SHIFT
@@ -231,6 +243,7 @@ registry.get_tier_distribution()
 **Purpose**: Test automatic tier shift detection logic
 
 ### 11. **Trigger Automatic Tier Shift**
+
 ```bash
 # Method 1: Add tokens until 80% qualify for higher tier
 # Continue adding high-tier tokens...
@@ -253,6 +266,7 @@ registry.get_last_tier_change()
 **Purpose**: Test both automatic and manual tier shifting
 
 ### 12. **Test Batch Operations**
+
 ```bash
 # Update all token tiers at once
 registry.refresh_all_tiers()
@@ -273,6 +287,7 @@ registry.get_tier_distribution()
 ## **Phase 5: Configuration Management**
 
 ### 13. **Update Tier Thresholds**
+
 ```bash
 # Test invalid thresholds (should fail)
 registry.set_tier_thresholds(invalid_thresholds_wrong_order)
@@ -298,6 +313,7 @@ registry.get_tier_thresholds()
 **Purpose**: Test tier threshold configuration management
 
 ### **NEW 13b. Test Grace Period Configuration**
+
 ```bash
 # Test grace period limits
 registry.get_grace_period_limits()
@@ -337,6 +353,7 @@ registry.set_grace_period(1_800_000)  # 30 minutes
 **Purpose**: Test adjustable grace period configuration and validation
 
 ### 14. **Test USD Rate Conversion**
+
 ```bash
 # Get current conversion rate
 registry.get_current_usd_rate()
@@ -351,6 +368,7 @@ registry.get_current_usd_rate()
 ## **Phase 6: Query Functions & Data Integrity**
 
 ### 15. **Test Enhanced Query Functions**
+
 ```bash
 # Get tokens by specific tier
 registry.get_tokens_by_tier(Tier::Tier1)
@@ -385,6 +403,7 @@ for token_id in [1, 2, 3, 4, 5]:
 **Purpose**: Validate all query functions work correctly including new grace period queries
 
 ### 16. **Test Tier Distribution Accuracy**
+
 ```bash
 # Manual count: Count tokens in each tier manually from your records
 # Then compare with contract
@@ -407,6 +426,7 @@ pending_tokens = registry.get_tokens_with_pending_changes()
 ## **Phase 7: Error Handling & Edge Cases**
 
 ### 17. **Test Authorization**
+
 ```bash
 # Test from non-owner account
 registry.set_tier_thresholds(any_thresholds)  # From non-owner
@@ -430,6 +450,7 @@ registry.add_token(token_contract, oracle_contract)  # From non-TokenManager
 **Purpose**: Verify role-based access control works correctly including new functions
 
 ### 18. **Test Input Validation**
+
 ```bash
 # Test zero address
 registry.add_token(zero_address, oracle_contract)
@@ -458,6 +479,7 @@ registry.emergency_tier_override(999, Tier::Tier1, "Non-existent token")
 **Purpose**: Ensure proper input validation and error handling including new parameters
 
 ### 19. **Test Oracle Failure Handling**
+
 ```bash
 # Scenario: Oracle contract unavailable or returns None
 # You can test this by setting wrong oracle address temporarily
@@ -485,31 +507,38 @@ registry.set_dot_usd_oracle(correct_oracle_address)
 ## **Phase 8: Event Monitoring**
 
 ### 20. **Verify All Events**
+
 Monitor blockchain events during testing for:
 
 **Token Management Events:**
+
 - `TokenAdded` - When tokens are registered
-- `TokenUpdated` - When token data is modified  
+- `TokenUpdated` - When token data is modified
 - `TokenRemoved` - When tokens are removed
 
 **Tier System Events:**
+
 - `TokenTierChanged` - When individual token tiers change
 - `ActiveTierShifted` - When the overall active tier shifts
 - `GracePeriodStarted` - When tier change grace periods begin
 - `TierThresholdsUpdated` - When tier thresholds are modified
 
 **NEW: Grace Period & Emergency Events:**
+
 - `GracePeriodUpdated` - When grace period duration is changed
 - `EmergencyTierOverride` - When emergency tier overrides are used
 
 **Access Control Events:**
+
 - `RoleGranted` - When roles are granted
 - `RoleRevoked` - When roles are revoked
 
 **Error Events:**
+
 - `OperationFailed` - When operations fail with details
 
 **Detailed Event Testing:**
+
 ```bash
 # Test grace period event details
 registry.set_grace_period(1800000)  # 30 minutes
@@ -535,6 +564,7 @@ registry.emergency_tier_override(token_id, Tier::Tier2, "Market emergency")
 ## **Phase 9: Performance & Gas Testing**
 
 ### 21. **Test Gas Limits**
+
 ```bash
 # Test with many tokens (10+ tokens)
 registry.refresh_all_tiers()
@@ -556,6 +586,7 @@ registry.should_shift_tier()
 ## **Phase 10: Integration Testing**
 
 ### 22. **Cross-Contract Calls**
+
 ```bash
 # Verify oracle integration
 registry.get_current_usd_rate()
@@ -577,41 +608,49 @@ registry.calculate_token_tier(token_id)
 ## **Testing Tips & Best Practices**
 
 ### **1. Event Monitoring**
+
 - Always check events after state-changing operations
 - Events provide detailed information about what happened
 - Use events to verify operations completed correctly
 
 ### **2. State Verification**
+
 - Always verify state changes with query functions
 - Cross-check calculated values manually
 - Ensure consistency between different query methods
 
 ### **3. Boundary Testing**
+
 - Test exactly at 80% threshold scenarios
 - Test with minimum token counts (5 tokens for tier shifts)
 - Test with maximum values and edge cases
 
 ### **4. Mock Data Strategy**
+
 - Use test oracle contracts with controllable data
 - Set known price/market cap values for predictable results
 - Test both positive and negative tier changes
 
 ### **5. Time-Based Testing**
+
 - For grace period testing, consider using test environment with controllable time
 - Test both before and after grace period expiration
 - Verify timestamp handling across different time zones
 
 ### **6. Multi-Account Testing**
+
 - Test role-based access from different accounts
 - Verify owner vs non-owner permissions
 - Test unauthorized access attempts
 
 ### **7. Error Case Coverage**
+
 - Test zero values, maximum values, and invalid inputs
 - Test with non-existent token IDs
 - Test with invalid contract addresses
 
 ### **8. Integration Scenarios**
+
 - Test complete workflows from token addition to tier shifting
 - Test recovery from oracle failures
 - Test system behavior under various market conditions
@@ -637,6 +676,7 @@ registry.calculate_token_tier(token_id)
 ## **New Testing Commands Summary**
 
 ### **Grace Period Management:**
+
 ```bash
 # Configuration
 registry.set_grace_period(period_ms)          # Set grace period (owner only)
@@ -652,6 +692,7 @@ registry.is_grace_period_expired(token_id)        # Has it expired?
 ```
 
 ### **Emergency Override:**
+
 ```bash
 # Override Functions
 registry.emergency_tier_override(token_id, tier, reason)           # Override to specific tier
@@ -660,6 +701,7 @@ registry.clear_pending_tier_change(token_id)                      # Clear pendin
 ```
 
 ### **Enhanced Events to Monitor:**
+
 - `GracePeriodUpdated` - Grace period duration changes
 - `EmergencyTierOverride` - Emergency tier override actions
 - `TokenTierChanged` - Now includes "emergency_override" reason

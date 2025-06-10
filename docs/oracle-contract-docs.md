@@ -8,7 +8,7 @@ The Oracle contract is a price feed service that provides real-time market data 
 
 ```
 ┌─────────────────┐
-│  Oracle Contract │
+│ Oracle Contract │
 ├─────────────────┤
 │ • Price Data    │
 │ • Market Cap    │

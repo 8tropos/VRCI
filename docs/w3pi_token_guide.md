@@ -9,22 +9,26 @@ The W3PI Token contract is a fully compliant PSP22 (Polkadot Standard Proposal 2
 ## Key Features
 
 ### ✅ PSP22 Standard Compliance
+
 - Transfer functionality with allowance mechanism
 - Event emission for all state changes
 - Full compatibility with PSP22 ecosystem
 
 ### ✅ Metadata Support
+
 - Token name: "W3PI Token"
 - Symbol: "W3PI"
 - Decimals: 12 (supporting micro-transactions)
 - Optional metadata fields
 
 ### ✅ Advanced Token Economics
+
 - Fixed supply model (1,000,000 tokens)
 - Precision handling with 12 decimal places
 - Overflow-safe arithmetic operations
 
 ### ✅ Developer-Friendly Architecture
+
 - Modular design with separated concerns
 - Comprehensive error handling
 - Extensive unit test coverage
@@ -34,7 +38,9 @@ The W3PI Token contract is a fully compliant PSP22 (Polkadot Standard Proposal 2
 ### Core PSP22 Functions
 
 #### `total_supply() -> u128`
+
 Returns the total token supply.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -43,7 +49,9 @@ pop call contract \
 ```
 
 #### `balance_of(owner: AccountId) -> u128`
+
 Returns the balance of a specific account.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -53,7 +61,9 @@ pop call contract \
 ```
 
 #### `transfer(to: AccountId, value: u128, data: Vec<u8>) -> Result<(), PSP22Error>`
+
 Transfers tokens from caller to another account.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -64,7 +74,9 @@ pop call contract \
 ```
 
 #### `approve(spender: AccountId, value: u128) -> Result<(), PSP22Error>`
+
 Approves another account to spend tokens on your behalf.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -75,7 +87,9 @@ pop call contract \
 ```
 
 #### `allowance(owner: AccountId, spender: AccountId) -> u128`
+
 Returns the remaining allowance between owner and spender.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -85,7 +99,9 @@ pop call contract \
 ```
 
 #### `transfer_from(from: AccountId, to: AccountId, value: u128, data: Vec<u8>) -> Result<(), PSP22Error>`
+
 Transfers tokens on behalf of another account (requires prior approval).
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -98,7 +114,9 @@ pop call contract \
 ### Allowance Management
 
 #### `increase_allowance(spender: AccountId, delta_value: u128) -> Result<(), PSP22Error>`
+
 Safely increases allowance to prevent race conditions.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -109,7 +127,9 @@ pop call contract \
 ```
 
 #### `decrease_allowance(spender: AccountId, delta_value: u128) -> Result<(), PSP22Error>`
+
 Safely decreases allowance.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -122,7 +142,9 @@ pop call contract \
 ### Metadata Functions
 
 #### `token_name() -> Option<String>`
+
 Returns the token name.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -131,7 +153,9 @@ pop call contract \
 ```
 
 #### `token_symbol() -> Option<String>`
+
 Returns the token symbol.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -140,7 +164,9 @@ pop call contract \
 ```
 
 #### `token_decimals() -> u8`
+
 Returns the number of decimals.
+
 ```bash
 pop call contract \
   --contract 5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr \
@@ -151,7 +177,9 @@ pop call contract \
 ## Events
 
 ### Transfer Event
+
 Emitted when tokens are transferred, minted, or burned.
+
 ```rust
 pub struct Transfer {
     pub from: Option<AccountId>,  // None for minting
@@ -161,7 +189,9 @@ pub struct Transfer {
 ```
 
 ### Approval Event
+
 Emitted when allowance is set or modified.
+
 ```rust
 pub struct Approval {
     pub owner: AccountId,
@@ -188,6 +218,7 @@ pub enum PSP22Error {
 ### Prerequisites
 
 1. **Install Dependencies**
+
 ```bash
 # Install Rust and cargo-contract
 curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
@@ -199,6 +230,7 @@ rustup target add wasm32-unknown-unknown
 ```
 
 2. **Fund Your Account**
+
 - Get PAS tokens from [Paseo Faucet](https://faucet.polkadot.io/)
 - Ensure you have at least 10 PAS for deployment
 
@@ -219,6 +251,7 @@ ls -la target/ink/
 ### Deployment Options
 
 #### Option 1: Interactive Deployment (Recommended)
+
 ```bash
 pop up \
   --url wss://rpc2.paseo.popnetwork.xyz \
@@ -229,12 +262,14 @@ pop up \
 ```
 
 When prompted, enter:
+
 - **supply**: `1000000000000` (1M tokens with 12 decimals)
 - **name**: `Your Token Name`
 - **symbol**: `SYMBOL`
 - **decimals**: `12`
 
 #### Option 2: Command Line Deployment
+
 ```bash
 pop up \
   --url wss://rpc2.paseo.popnetwork.xyz \
@@ -246,6 +281,7 @@ pop up \
 ```
 
 #### Option 3: Minimal Token (No Metadata)
+
 ```bash
 pop up \
   --url wss://rpc2.paseo.popnetwork.xyz \
@@ -273,6 +309,7 @@ pop up \
 ## Integration Examples
 
 ### Basic Transfer Example
+
 ```bash
 #!/bin/bash
 TOKEN_ADDRESS="5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr"
@@ -290,6 +327,7 @@ pop call contract \
 ```
 
 ### Allowance Pattern Example
+
 ```bash
 #!/bin/bash
 TOKEN_ADDRESS="5DNvZmAA6QwqYdvBFhcdh8fd3U9iyqrUAqh798SxUDfA1fnr"
@@ -317,6 +355,7 @@ pop call contract \
 ## Integration with W3PI Ecosystem
 
 ### Oracle Price Feeds
+
 The token can be integrated with the W3PI Oracle contract for real-time price data:
 
 ```bash
@@ -330,6 +369,7 @@ pop call contract \
 ```
 
 ### Registry Integration
+
 Add token to the W3PI Registry for portfolio management:
 
 ```bash
@@ -345,6 +385,7 @@ pop call contract \
 ## Testing Guide
 
 ### Unit Tests
+
 The contract includes comprehensive unit tests:
 
 ```bash
@@ -353,6 +394,7 @@ cargo test
 ```
 
 ### Integration Testing
+
 ```bash
 # Test basic functionality
 ./scripts/test_token.sh
@@ -397,28 +439,37 @@ cargo test
 ## Common Issues and Solutions
 
 ### Issue: String Parameter Errors
+
 ```
 Error: Expected a String value
 ```
+
 **Solution**: Use interactive mode or escape quotes properly:
+
 ```bash
 --args 1000000000000 \"Token\ Name\" \"SYMBOL\" 12
 ```
 
 ### Issue: Insufficient Gas
+
 ```
 Error: Insufficient gas
 ```
+
 **Solution**: Increase gas limit:
+
 ```bash
 --gas 1000000000000
 ```
 
 ### Issue: Balance Calculation
+
 ```
 Error: Balance shows large numbers
 ```
+
 **Solution**: Remember to account for decimals:
+
 ```
 Displayed: 1000000000000
 Actual: 1.000000000000 tokens (12 decimals)
@@ -427,17 +478,19 @@ Actual: 1.000000000000 tokens (12 decimals)
 ## Contract Architecture
 
 ### Modular Design
+
 ```
 token/
 ├── lib.rs          # Main contract logic
 ├── data.rs         # PSP22Data implementation
-├── traits.rs       # PSP22 trait definitions  
+├── traits.rs       # PSP22 trait definitions
 ├── events.rs       # Event definitions
 ├── errors.rs       # Error types
 └── testing.rs      # Test utilities
 ```
 
 ### Dependencies
+
 - `ink`: Core smart contract framework
 - `shared`: Common types and utilities
 - `scale`: Serialization codec
@@ -453,18 +506,21 @@ token/
 ## Support and Resources
 
 ### Documentation
+
 - [PSP22 Standard](https://github.com/w3f/PSPs/blob/master/PSPs/psp-22.md)
 - [ink! Documentation](https://use.ink/)
 - [Pop CLI Guide](https://learn.onpop.io/)
 
 ### Community
+
 - [ink! Discord](https://discord.gg/wGUDt2p)
 - [Polkadot Discord](https://discord.gg/polkadot)
 
 ### Tools
+
 - [Contracts UI](https://contracts-ui.substrate.io/)
 - [Polkadot.js Apps](https://polkadot.js.org/apps/)
 
 ---
 
-*This token contract provides the foundation for the W3PI ecosystem, enabling decentralized token management with oracle-fed pricing and registry-based portfolio tracking.*
+_This token contract provides the foundation for the W3PI ecosystem, enabling decentralized token management with oracle-fed pricing and registry-based portfolio tracking._

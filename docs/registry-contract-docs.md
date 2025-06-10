@@ -8,7 +8,7 @@ The Registry contract serves as a central hub for managing token information and
 
 ```
 ┌─────────────────┐     Cross-Contract Calls     ┌─────────────────┐
-│ Registry        │────────────────────────────→│ Oracle Contract │
+│ Registry        │────────────────────────────→ │ Oracle Contract │
 │ Contract        │                              │                 │
 ├─────────────────┤                              ├─────────────────┤
 │ • Token Data    │                              │ • Price Data    │
